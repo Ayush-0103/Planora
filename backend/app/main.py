@@ -1,10 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from app.database import Base, engine
 import app.models  # IMPORTANT: loads all models
+
 from app.routes.auth import router as auth_router
+from app.routes.study_plans import router as study_plans_router
+from app.routes.rag import router as rag_router
+
 
 app = FastAPI(title="Planora API")
 
@@ -13,7 +20,7 @@ Base.metadata.create_all(bind=engine)
 
 # Allow frontend connection
 origins = [
-    "http://localhost:5173",
+    "http://localhost:8080",
 ]
 
 app.add_middleware(
@@ -38,6 +45,8 @@ def db_test():
         connection.execute(text("SELECT 1"))
     return {"db_status": "connected"}
 
+
+# Routers
 app.include_router(auth_router)
-from app.routes.study_plans import router as study_plans_router
 app.include_router(study_plans_router)
+app.include_router(rag_router)

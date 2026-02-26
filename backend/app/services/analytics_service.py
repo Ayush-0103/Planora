@@ -32,3 +32,11 @@ def calculate_plan_analytics(db: Session, plan_id: int):
         "missed_days": missed_days,
         "consistency_score": consistency_score
     }
+def calculate_risk_index(analytics):
+    score = 100
+    
+    score -= analytics["completion_rate"] * 0.5
+    score -= analytics["consistency_score"] * 0.3
+    score -= analytics["missed_days"] * 2
+
+    return max(0, min(100, score))

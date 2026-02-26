@@ -14,7 +14,8 @@ from app.models.user import User
 from app.services.plan_generator import generate_structured_plan
 from app.services.analytics_service import calculate_plan_analytics
 from app.services.adaptive_engine import adapt_study_plan
-
+from app.services.ai_service import generate_ai_feedback
+from app.services.ai_adaptive_engine import adapt_study_plan_with_ai
 
 router = APIRouter(prefix="/plans", tags=["Study Plans"])
 
@@ -170,3 +171,23 @@ def adapt_plan(
         raise HTTPException(status_code=400, detail="Adaptation failed")
 
     return result
+@router.post("/{plan_id}/ai-feedback")
+def ai_feedback(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    plan = db.query(StudyPlan).filter(
+        StudyPlan.id == plan_id,
+        StudyPlan.user_id == current_user.id
+    ).first()
+
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    feedback = generate_ai_feedback(db, plan_id)
+
+    return {"ai_feedback": feedback}
+@router.post("/{plan_id}/ai-adapt")
+def ai_adapt_plan(plan_id: int, db: Session = Depends(get_db)):
+    return adapt_study_plan_with_ai(db, plan_id)
